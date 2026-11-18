@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, Copy, Check, X, FileText, FileCode } from 'lucide-react';
 import { CompleteSmogPlan } from '../types/smog';
 
@@ -10,6 +10,17 @@ interface ExportModalProps {
 
 export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, plan }) => {
   const [copiedType, setCopiedType] = useState<'md' | 'json' | null>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -150,16 +161,17 @@ ${cs.urgentProtocols.map((p) => `  - ${p}`).join('\n')}
     >
       <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 text-slate-100">
         <button
+          type="button"
           onClick={onClose}
-          aria-label="Close dialog"
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          aria-label="Close export dialog"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
 
         <div className="flex items-center space-x-3 mb-4">
           <div className="p-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl">
-            <Download className="w-6 h-6" />
+            <Download className="w-6 h-6" aria-hidden="true" />
           </div>
           <div>
             <h2 id="export-modal-title" className="text-xl font-bold tracking-tight text-white">
@@ -171,15 +183,19 @@ ${cs.urgentProtocols.map((p) => `  - ${p}`).join('\n')}
           </div>
         </div>
 
-        <div className="space-y-3.5 my-5">
+        <div className="space-y-4 my-6">
           {/* Markdown Option */}
-          <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
-            <div className="flex items-start space-x-3">
-              <FileText className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-slate-800 text-slate-200 rounded-lg">
+                <FileText className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+              </div>
               <div>
-                <span className="text-sm font-bold text-white block">Markdown Report (.md)</span>
-                <span className="text-xs text-slate-400 leading-snug">
-                  Comprehensive formatted document with routines, DIY guides, and crisis alerts.
+                <strong className="text-sm font-semibold text-white block">
+                  Markdown Report (.md)
+                </strong>
+                <span className="text-xs text-slate-400">
+                  Formatted for noticeboards, school memos, or documentation
                 </span>
               </div>
             </div>
@@ -187,33 +203,45 @@ ${cs.urgentProtocols.map((p) => `  - ${p}`).join('\n')}
               <button
                 type="button"
                 onClick={() => handleCopy('md')}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                title="Copy Markdown"
+                aria-label="Copy Markdown to clipboard"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
                 {copiedType === 'md' ? (
-                  <Check className="w-4 h-4 text-emerald-400" />
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                    <span>Copied</span>
+                  </>
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <>
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Copy</span>
+                  </>
                 )}
               </button>
               <button
                 type="button"
                 onClick={() => handleDownload('md')}
-                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow"
+                aria-label="Download Markdown file"
+                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
-                Download
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Save</span>
               </button>
             </div>
           </div>
 
           {/* JSON Option */}
-          <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
-            <div className="flex items-start space-x-3">
-              <FileCode className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-slate-800 text-slate-200 rounded-lg">
+                <FileCode className="w-5 h-5 text-cyan-400" aria-hidden="true" />
+              </div>
               <div>
-                <span className="text-sm font-bold text-white block">Structured JSON (.json)</span>
-                <span className="text-xs text-slate-400 leading-snug">
-                  Machine-readable data for automated telemetry, IoT air filters, or API ingestion.
+                <strong className="text-sm font-semibold text-white block">
+                  Structured JSON Data (.json)
+                </strong>
+                <span className="text-xs text-slate-400">
+                  Machine-readable for data integration, IoT gateways, and backups
                 </span>
               </div>
             </div>
@@ -221,21 +249,29 @@ ${cs.urgentProtocols.map((p) => `  - ${p}`).join('\n')}
               <button
                 type="button"
                 onClick={() => handleCopy('json')}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                title="Copy JSON"
+                aria-label="Copy JSON to clipboard"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               >
                 {copiedType === 'json' ? (
-                  <Check className="w-4 h-4 text-cyan-400" />
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                    <span>Copied</span>
+                  </>
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <>
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Copy</span>
+                  </>
                 )}
               </button>
               <button
                 type="button"
                 onClick={() => handleDownload('json')}
-                className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-all shadow"
+                aria-label="Download JSON file"
+                className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               >
-                Download
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Save</span>
               </button>
             </div>
           </div>
@@ -245,7 +281,7 @@ ${cs.urgentProtocols.map((p) => `  - ${p}`).join('\n')}
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400"
           >
             Close
           </button>

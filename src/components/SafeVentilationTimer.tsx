@@ -3,7 +3,6 @@ import {
   Clock,
   Sun,
   CheckCircle2,
-  Info,
 } from 'lucide-react';
 import { SafeVentilationWindow } from '../types/smog';
 
@@ -67,7 +66,7 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4" aria-hidden="true" />
             <span>Atmospheric Inversion Dynamics & Hourly Ventilation Matrix</span>
           </div>
           <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -85,8 +84,10 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
 
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+            aria-label="Dismiss ventilation timer"
+            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
           >
             Dismiss
           </button>
@@ -98,41 +99,52 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
         <div className="p-4 bg-gradient-to-r from-emerald-950/40 to-slate-950 border border-emerald-500/30 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center space-x-1">
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
+              <Sun className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
               <span>Recommended Daily Aeration Window</span>
             </span>
-            <div className="text-2xl font-black text-white font-mono">
-              {primaryWindow.startHour} - {primaryWindow.endHour}
+            <div className="flex items-baseline space-x-2">
+              <span className="text-xl sm:text-2xl font-black text-white font-mono">
+                {primaryWindow.startHour} - {primaryWindow.endHour}
+              </span>
+              <span className="text-xs text-emerald-300 font-medium">
+                (Solar Convection Lift Window)
+              </span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
-              {primaryWindow.recommendedAction}
+            <p className="text-xs text-slate-300 max-w-xl">
+              {primaryWindow.reason}
             </p>
           </div>
 
-          <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-center shrink-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">
-              Estimated Midday AQI
+          <div className="px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl shrink-0 text-center">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              Max Cross-Vent Duration
             </span>
-            <span className="text-xl font-black text-emerald-400 font-mono">
-              ~{primaryWindow.ambientEstimatedAQI}
+            <span className="text-base font-bold text-emerald-400 font-mono">
+              15 Minutes
             </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">
-              (vs {currentAQI} baseline)
+            <span className="text-[10px] text-slate-400 block">
+              with purifier on turbo
             </span>
           </div>
         </div>
       )}
 
-      {/* 24-Hour Visual Hourly Bar Matrix */}
+      {/* 24-Hour Interactive Diurnal Inversion Matrix */}
       <div>
-        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-          <span>Click any hour to inspect atmospheric conditions:</span>
+        <div className="flex items-center justify-between text-xs text-slate-300 mb-2">
+          <span className="font-bold uppercase tracking-wider text-[11px]">
+            Diurnal Inversion Stability Matrix (Click Any Hour to Inspect):
+          </span>
           <span className="font-mono text-emerald-400 font-semibold">
             Current Local Hour: {currentHour.toString().padStart(2, '0')}:00
           </span>
         </div>
 
-        <div className="grid grid-cols-12 sm:grid-cols-24 gap-1">
+        <div
+          role="group"
+          aria-label="24-hour diurnal inversion stability slots"
+          className="grid grid-cols-12 sm:grid-cols-24 gap-1"
+        >
           {hourlyData.map((slot) => {
             const isCurrent = slot.hour === currentHour;
             const isSelected = slot.hour === selectedHour;
@@ -147,9 +159,11 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
               <button
                 key={slot.hour}
                 type="button"
+                aria-pressed={isSelected}
+                aria-label={`${slot.hour}:00 to ${(slot.hour + 1) % 24}:00. ${slot.label}. Est AQI: ${slot.estimatedAqi}. Risk: ${slot.risk}`}
                 onClick={() => setSelectedHour(slot.hour)}
                 title={`${slot.hour}:00 - ${slot.label} (Est AQI: ${slot.estimatedAqi})`}
-                className={`h-12 rounded-lg flex flex-col items-center justify-between py-1 transition-all ${bgClass} ${
+                className={`h-12 rounded-lg flex flex-col items-center justify-between py-1 transition-all focus:outline-none focus:ring-2 focus:ring-white ${bgClass} ${
                   isSelected ? 'ring-2 ring-white scale-105 z-10' : 'opacity-80 hover:opacity-100'
                 } ${isCurrent ? 'border-2 border-cyan-400' : ''}`}
               >
@@ -157,12 +171,12 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
                   {slot.hour}
                 </span>
                 {isCurrent && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping" aria-hidden="true" />
                 )}
                 {slot.risk === 'optimal' ? (
-                  <CheckCircle2 className="w-3 h-3 text-slate-950 stroke-[3]" />
+                  <CheckCircle2 className="w-3 h-3 text-slate-950 stroke-[3]" aria-hidden="true" />
                 ) : (
-                  <span className="text-[8px] font-mono text-white/80">
+                  <span className="text-[8px] font-mono text-white/80" aria-hidden="true">
                     {slot.risk === 'hazardous' ? '!' : ''}
                   </span>
                 )}
@@ -185,48 +199,47 @@ export const SafeVentilationTimer: React.FC<SafeVentilationTimerProps> = ({
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded bg-slate-800 font-mono font-bold text-white">
-              {activeHourInfo.hour.toString().padStart(2, '0')}:00 - {(activeHourInfo.hour + 1).toString().padStart(2, '0')}:00
+              {activeHourInfo.hour.toString().padStart(2, '0')}:00 - {((activeHourInfo.hour + 1) % 24).toString().padStart(2, '0')}:00
             </span>
             <span
-              className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
+              className={`px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px] ${
                 activeHourInfo.risk === 'optimal'
-                  ? 'bg-emerald-500/20 text-emerald-300'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : activeHourInfo.risk === 'moderate'
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : 'bg-rose-500/20 text-rose-300'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
               }`}
             >
-              {activeHourInfo.risk} Condition
+              {activeHourInfo.risk.toUpperCase()} ATMOSPHERIC STAGNATION
             </span>
           </div>
-          <p className="text-slate-300">
-            <strong>Atmospheric State: </strong>
-            {activeHourInfo.label}
+          <p className="text-slate-300 font-medium">
+            <strong>Condition:</strong> {activeHourInfo.label}
           </p>
         </div>
 
-        <div className="sm:text-right shrink-0">
-          <span className="text-slate-400 block text-[10px]">Estimated Micro-Ambient AQI:</span>
-          <span className="text-base font-bold font-mono text-white">
-            {activeHourInfo.estimatedAqi}
-          </span>
-          <span className="text-[10px] text-slate-400 block">
-            {activeHourInfo.risk === 'optimal'
-              ? '✓ Safe for 15-min air change'
-              : '✗ Keep all windows firmly latched'}
-          </span>
-        </div>
-      </div>
+        <div className="flex items-center space-x-4 shrink-0">
+          <div className="text-right">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              Estimated In-Situ AQI
+            </span>
+            <span className="text-lg font-mono font-black text-white">
+              ~{activeHourInfo.estimatedAqi}
+            </span>
+          </div>
 
-      {/* Atmospheric Science Legend */}
-      <div className="p-4 bg-slate-950/40 border border-slate-800/80 rounded-xl space-y-2 text-xs text-slate-400">
-        <div className="flex items-center space-x-1.5 text-slate-300 font-semibold">
-          <Info className="w-4 h-4 text-emerald-400" />
-          <span>Why Thermal Inversion Determines Ventilation Safety:</span>
+          <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] max-w-xs">
+            {activeHourInfo.risk === 'optimal' ? (
+              <span className="text-emerald-300 font-semibold">
+                ✓ Permitted window for 15-minute cross-ventilation.
+              </span>
+            ) : (
+              <span className="text-rose-300 font-semibold">
+                ✗ Keep windows sealed. Recirculate filtered air only.
+              </span>
+            )}
+          </div>
         </div>
-        <p className="leading-relaxed">
-          During winter nights, the Earth&apos;s surface cools rapidly via radiation, cooling the air immediately above it. A layer of warmer air traps this dense cold air beneath it like a lid (nocturnal temperature inversion). Pollutants emitted at ground level (vehicle exhaust, woodsmoke) cannot rise and accumulate to lethal concentrations. Only when mid-day solar heating warms the ground does the inversion layer break, creating vertical thermal mixing that dilutes surface pollutants by up to 50%.
-        </p>
       </div>
     </div>
   );

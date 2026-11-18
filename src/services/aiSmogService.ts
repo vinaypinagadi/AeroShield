@@ -15,22 +15,49 @@ import {
 const STORAGE_KEY = 'aero_gemini_api_key';
 const STORAGE_PREFERENCE = 'aero_gemini_key_persist';
 
+function getClientStorage(type: 'session' | 'local'): Storage | null {
+  if (typeof window !== 'undefined') {
+    try {
+      return type === 'session' ? window.sessionStorage : window.localStorage;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof globalThis !== 'undefined') {
+    const g = globalThis as unknown as {
+      window?: { sessionStorage?: Storage; localStorage?: Storage };
+      sessionStorage?: Storage;
+      localStorage?: Storage;
+    };
+    if (g.window) {
+      return type === 'session' ? g.window.sessionStorage || null : g.window.localStorage || null;
+    }
+    return type === 'session' ? g.sessionStorage || null : g.localStorage || null;
+  }
+  return null;
+}
+
 /**
  * Retrieves the active API key from sessionStorage, localStorage, or Vite environment variables.
  */
 export function getActiveApiKey(): string | null {
-  if (typeof window === 'undefined') return null;
+  const sessionStorage = getClientStorage('session');
+  const localStorage = getClientStorage('local');
 
   // 1. Session Storage (higher priority for secure ephemeral sessions)
-  const sessionKey = window.sessionStorage.getItem(STORAGE_KEY);
-  if (sessionKey && sessionKey.trim().length > 0) {
-    return sessionKey.trim();
+  if (sessionStorage) {
+    const sessionKey = sessionStorage.getItem(STORAGE_KEY);
+    if (sessionKey && sessionKey.trim().length > 0) {
+      return sessionKey.trim();
+    }
   }
 
   // 2. Local Storage (user explicitly chose to remember key)
-  const localKey = window.localStorage.getItem(STORAGE_KEY);
-  if (localKey && localKey.trim().length > 0) {
-    return localKey.trim();
+  if (localStorage) {
+    const localKey = localStorage.getItem(STORAGE_KEY);
+    if (localKey && localKey.trim().length > 0) {
+      return localKey.trim();
+    }
   }
 
   // 3. Environment Variable (from .env.local or build environment)
@@ -46,24 +73,25 @@ export function getActiveApiKey(): string | null {
  * Saves or clears API key in client storage
  */
 export function setActiveApiKey(key: string | null, rememberInLocalStorage = false): void {
-  if (typeof window === 'undefined') return;
+  const sessionStorage = getClientStorage('session');
+  const localStorage = getClientStorage('local');
 
   if (!key || key.trim().length === 0) {
-    window.sessionStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(STORAGE_PREFERENCE);
+    sessionStorage?.removeItem(STORAGE_KEY);
+    localStorage?.removeItem(STORAGE_KEY);
+    localStorage?.removeItem(STORAGE_PREFERENCE);
     return;
   }
 
   const cleanKey = key.trim();
   if (rememberInLocalStorage) {
-    window.localStorage.setItem(STORAGE_KEY, cleanKey);
-    window.localStorage.setItem(STORAGE_PREFERENCE, 'true');
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    localStorage?.setItem(STORAGE_KEY, cleanKey);
+    localStorage?.setItem(STORAGE_PREFERENCE, 'true');
+    sessionStorage?.removeItem(STORAGE_KEY);
   } else {
-    window.sessionStorage.setItem(STORAGE_KEY, cleanKey);
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(STORAGE_PREFERENCE);
+    sessionStorage?.setItem(STORAGE_KEY, cleanKey);
+    localStorage?.removeItem(STORAGE_KEY);
+    localStorage?.removeItem(STORAGE_PREFERENCE);
   }
 }
 
@@ -71,8 +99,9 @@ export function setActiveApiKey(key: string | null, rememberInLocalStorage = fal
  * Checks if key storage preference is local
  */
 export function isKeyPersistedInLocalStorage(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(STORAGE_PREFERENCE) === 'true';
+  const localStorage = getClientStorage('local');
+  if (!localStorage) return false;
+  return localStorage.getItem(STORAGE_PREFERENCE) === 'true';
 }
 
 /**

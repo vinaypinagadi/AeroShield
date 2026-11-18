@@ -141,6 +141,8 @@ export function getCommuteExposureWeight(method: CommuteMethod): number {
       return 0.65; // Modern cabin filters, zero direct exhaust tailpipe
     case 'work_from_home':
       return 0.15; // Minimal outdoor transit exposure
+    default:
+      return 1.0;
   }
 }
 
@@ -157,6 +159,8 @@ export function getInfiltrationFactor(ventilation: VentilationType): number {
       return 0.85; // 85% penetration if opened
     case 'tightly_sealed_hvac':
       return 0.20; // 20% penetration
+    default:
+      return 0.50;
   }
 }
 
@@ -177,6 +181,8 @@ export function getIndoorHeatingEmissionLoad(heating: HeatingMethod): number {
       return 180; // High PM2.5 and carbon monoxide
     case 'none_or_blankets':
       return 0;
+    default:
+      return 0;
   }
 }
 
@@ -194,6 +200,8 @@ export function getProximityMultiplier(hazard: ProximityHazard): number {
     case 'dense_urban':
       return 1.15; // High ambient baseline
     case 'suburban':
+      return 1.0;
+    default:
       return 1.0;
   }
 }
@@ -250,12 +258,12 @@ export function computeSafeVentilationWindows(
 export function computeExposureAnalysis(
   input: SmogContextInput
 ): DeterministicExposureAnalysis {
-  const outdoorPm25 = convertAQIToPm25(input.currentAQI);
-  const proximityMul = getProximityMultiplier(input.proximityHazard);
+  const outdoorPm25 = convertAQIToPm25(input.currentAQI || 0);
+  const proximityMul = getProximityMultiplier(input.proximityHazard) || 1.0;
   const effectiveOutdoorPm25 = outdoorPm25 * proximityMul;
 
   // Infiltration factor
-  let infiltration = getInfiltrationFactor(input.ventilationType);
+  let infiltration = getInfiltrationFactor(input.ventilationType) || 0.50;
   if (input.airPurifierStatus === 'hepa_commercial') {
     infiltration *= 0.25; // 75% indoor scrubbing
   } else if (input.airPurifierStatus === 'diy_corsi_rosenthal') {
@@ -265,14 +273,19 @@ export function computeExposureAnalysis(
   }
 
   // Indoor sources
-  const indoorHeatingPm = getIndoorHeatingEmissionLoad(input.heatingMethod);
-  const cookingPm = input.cookingFuel === 'biomass_firewood' ? 60 : input.cookingFuel === 'lpg' ? 12 : 3;
+  const indoorHeatingPm = getIndoorHeatingEmissionLoad(input.heatingMethod) || 0;
+  let cookingPm = 10;
+  if (input.cookingFuel === 'biomass_firewood') cookingPm = 60;
+  else if (input.cookingFuel === 'lpg') cookingPm = 12;
+  else if (input.cookingFuel === 'piped_natural_gas') cookingPm = 8;
+  else if (input.cookingFuel === 'induction_electric') cookingPm = 0;
 
   const estimatedIndoorPm25 = effectiveOutdoorPm25 * infiltration + indoorHeatingPm + cookingPm;
 
   // Commute exposure
-  const commuteWeight = getCommuteExposureWeight(input.commuteMethod);
-  const commuteHours = Math.min(4, input.commuteDurationMinutes / 60);
+  const commuteWeight = getCommuteExposureWeight(input.commuteMethod) || 1.0;
+  const commuteDuration = Math.max(0, input.commuteDurationMinutes || 0);
+  const commuteHours = Math.min(4, commuteDuration / 60);
   const indoorHours = Math.max(0, 24 - commuteHours);
 
   // Typical ventilation rate: ~0.6 m³/hour at rest, ~1.8 m³/hour during active commute

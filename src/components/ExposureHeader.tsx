@@ -42,6 +42,7 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
     >
       {/* Background ambient glow according to AQI severity */}
       <div
+        aria-hidden="true"
         className={`absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none ${
           context.currentAQI >= 400
             ? 'bg-red-600'
@@ -60,7 +61,7 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
             <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 mb-1">
               <span>{context.cityName || 'Target Micro-Environment'}</span>
               <span>•</span>
-              <span className="capitalize">{context.proximityHazard.replace('_', ' ')}</span>
+              <span className="capitalize">{context.proximityHazard.replace(/_/g, ' ')}</span>
             </div>
             <div className="flex items-baseline space-x-3">
               <span className="text-5xl sm:text-6xl font-black tracking-tight text-white font-mono">
@@ -82,14 +83,14 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
           {/* Thermal Inversion Status */}
           {context.hasThermalInversion ? (
             <div className="flex items-center space-x-2 px-3 py-2 bg-slate-950/60 border border-red-500/30 rounded-xl text-xs text-red-300">
-              <ThermometerSnowflake className="w-4 h-4 text-red-400 flex-shrink-0 animate-pulse" />
+              <ThermometerSnowflake className="w-4 h-4 text-red-400 flex-shrink-0 animate-pulse" aria-hidden="true" />
               <span>
                 <strong>Winter Thermal Inversion Active:</strong> Ground cold pool traps particulate smoke below 150m.
               </span>
             </div>
           ) : (
             <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-950/40 border border-slate-800 rounded-xl text-xs text-slate-400">
-              <Wind className="w-3.5 h-3.5 text-slate-400" />
+              <Wind className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
               <span>Normal atmospheric vertical mixing</span>
             </div>
           )}
@@ -151,7 +152,7 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
           {/* Cigarette Toxicity Equivalence */}
           <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 col-span-2 sm:col-span-1 flex flex-col justify-between">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
-              <Cigarette className="w-3.5 h-3.5 text-rose-400" />
+              <Cigarette className="w-3.5 h-3.5 text-rose-400" aria-hidden="true" />
               <span>Toxic Equiv.</span>
             </span>
             <div className="my-1.5">
@@ -175,7 +176,7 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
         <div className="lg:col-span-3 bg-gradient-to-br from-emerald-950/40 to-slate-950/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Aeration Window</span>
             </span>
             <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-mono font-semibold">
@@ -197,11 +198,12 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
           )}
 
           <button
+            type="button"
             onClick={onExploreVentilation}
-            className="w-full inline-flex items-center justify-center space-x-1 text-xs font-semibold text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 py-1.5 px-2.5 rounded-lg border border-emerald-500/30 transition-all"
+            className="w-full inline-flex items-center justify-center space-x-1 text-xs font-semibold text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 py-1.5 px-2.5 rounded-lg border border-emerald-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400"
           >
             <span>View 24h Ventilation Guide</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -220,9 +222,9 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
             >
               <div className="flex items-start space-x-2.5">
                 {alert.severity === 'critical' ? (
-                  <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                 ) : (
-                  <Flame className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <Flame className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                 )}
                 <div>
                   <strong className="font-bold block sm:inline mr-2">
@@ -232,7 +234,7 @@ export const ExposureHeader: React.FC<ExposureHeaderProps> = ({
                 </div>
               </div>
               <div className="sm:text-right flex items-center space-x-1.5 text-slate-300 bg-slate-900/60 px-2.5 py-1 rounded-lg border border-slate-800 shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
                 <span className="text-[11px] font-medium">{alert.mitigation}</span>
               </div>
             </div>
